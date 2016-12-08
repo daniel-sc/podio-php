@@ -6,7 +6,6 @@ use GuzzleHttp\Exception\TransferException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\RequestOptions;
 use GuzzleHttp\TransferStats;
-use GuzzleHttp;
 use GuzzleHttp\Psr7\MultipartStream;
 
 class Podio {
@@ -196,7 +195,7 @@ class Podio {
         elseif (empty($options['oauth_request'])) {
           // application/json
           $encoded_attributes = json_encode($attributes);
-          $request = $request->withBody(GuzzleHttp\Psr7\stream_for($attributes));
+          $request = $request->withBody(GuzzleHttp\Psr7\stream_for($encoded_attributes));
           $request = $request->withHeader('Content-type', 'application/json');
         }
         else {
