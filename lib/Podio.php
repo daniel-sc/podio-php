@@ -184,11 +184,13 @@ class Podio {
         if (!empty($options['upload'])) {
           $request = $request->withBody(new MultipartStream([
             [
-              'name' => 'filename',
-              'contents' => $attributes['filename']
-            ], [
               'name' => 'source',
-              'contents' => fopen($options['upload'], 'r')
+              'contents' => fopen($options['upload'], 'r'),
+              'filename' => $attributes['filename']
+            ], [
+              'name' => 'filename',
+              'contents' => $attributes['filename'],
+              'filename' => $attributes['filename']
             ]
           ]));
           $request = $request->withHeader('Content-type', 'multipart/form-data');
