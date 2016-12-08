@@ -6,6 +6,8 @@ use GuzzleHttp\Exception\TransferException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\RequestOptions;
 use GuzzleHttp\TransferStats;
+use GuzzleHttp;
+use GuzzleHttp\Psr7\MultipartStream;
 
 class Podio {
   public static $oauth, $debug, $logger, $session_manager, $last_response, $auth_type, $http_client;
@@ -180,25 +182,33 @@ class Podio {
         break;
       case self::POST:
         if (!empty($options['upload'])) {
-          $request = $request->withBody($attributes);
+          $request = $request->withBody(new MultipartStream([
+            [
+              'name' => 'filename',
+              'contents' => $attributes['filename']
+            ], [
+              'name' => 'source',
+              'contents' => fopen($options['upload'], 'r');
+            ]
+          ]));
           $request = $request->withHeader('Content-type', 'multipart/form-data');
         }
         elseif (empty($options['oauth_request'])) {
           // application/json
           $encoded_attributes = json_encode($attributes);
-          $request = $request->withBody($encoded_attributes);
+          $request = $request->withBody(GuzzleHttp\Psr7\stream_for($attributes));
           $request = $request->withHeader('Content-type', 'application/json');
         }
         else {
           // x-www-form-urlencoded
           $encoded_attributes = static::encode_attributes($attributes);
-          $request = $request->withBody($encoded_attributes);
+          $request = $request->withBody(GuzzleHttp\Psr7\stream_for($encoded_attributes));
           $request = $request->withHeader('Content-type', 'application/x-www-form-urlencoded');
         }
         break;
       case self::PUT:
         $encoded_attributes = json_encode($attributes);
-        $request = $request->withBody($encoded_attributes);
+        $request = $request->withBody(GuzzleHttp\Psr7\stream_for($encoded_attributes));
         $request = $request->withHeader('Content-type', 'application/json');
         break;
     }
