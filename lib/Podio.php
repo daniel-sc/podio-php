@@ -154,12 +154,7 @@ class Podio {
       throw new PodioDataIntegrityError('Attributes must be an array');
     }
 
-    $transferTime = 0;
-    $request = new Request($method, $url, [
-      RequestOptions::ON_STATS => function(TransferStats $stats) use (&$transferTime) {
-      	$transferTime = $stats->getTransferTime();
-      }
-    ]);
+    $request = new Request($method, $url);
     switch ($method) {
       case self::GET:
         $request = $request->withHeader('Content-type', 'application/x-www-form-urlencoded');
@@ -222,8 +217,13 @@ class Podio {
     $response = new PodioResponse();
 
     try {
+      $transferTime = 0;
       /** \Psr\Http\Message\ResponseInterface */
-      $http_response = self::$http_client->send($request);
+      $http_response = self::$http_client->send($request, [
+        RequestOptions::ON_STATS => function(TransferStats $stats) use (&$transferTime) {
+          $transferTime = $stats->getTransferTime();
+        }
+      ]);
       $response->status = $http_response->getStatusCode();
       $response->headers = array_map(function($values) {
         return implode(', ', $values);
