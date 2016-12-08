@@ -25,7 +25,7 @@ class PodioFile extends PodioObject {
   }
 
   private function get_download_link($size = null) {
-    return $size ? ($this->link + '/' + $size) : $this->link;
+    return $size ? ($this->link . '/' . $size) : $this->link;
   }
 
   /**
@@ -41,7 +41,7 @@ class PodioFile extends PodioObject {
    * It can only be used after you have a PodioFile object.
    *
    * In contrast to get_raw this method does use minimal memory (the result is stored in php://temp)
-   * @return StreamInterface
+   * @return \Psr\Http\Message\StreamInterface
    */
   public function get_raw_as_resource($size = null) {
     return Podio::get($this->get_download_link($size), array(), array('file_download' => true, 'return_raw_as_resource_only' => true));

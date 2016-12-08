@@ -2,18 +2,21 @@
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
-use GuzzleHttp\Exception\TransferException;
 use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Psr7\Uri;
 use GuzzleHttp\RequestOptions;
 use GuzzleHttp\TransferStats;
 use GuzzleHttp\Psr7\MultipartStream;
 
 class Podio {
-  public static $oauth, $debug, $logger, $session_manager, $last_response, $auth_type, $http_client;
+  public static $oauth, $debug, $logger, $session_manager, $last_response, $auth_type;
+  /** @var \GuzzleHttp\Client */
+  public static $http_client;
   protected static $url, $client_id, $client_secret, $secret, $headers;
+  /** @var \Psr\Http\Message\ResponseInterface */
+  private static $last_http_response;
 
   const VERSION = '4.3.0';
-
   const GET = 'GET';
   const POST = 'POST';
   const PUT = 'PUT';
@@ -30,6 +33,7 @@ class Podio {
     $client_config = [
       'base_uri' => self::$url,
       RequestOptions::HTTP_ERRORS => false,
+      RequestOptions::DEBUG => true,
       RequestOptions::HEADERS => [
         'Accept' => 'application/json',
       	'User-Agent' => 'Podio PHP Client/'. self::VERSION . '-guzzle'
@@ -156,6 +160,7 @@ class Podio {
       throw new PodioDataIntegrityError('Attributes must be an array');
     }
 
+    /** @var Request $request */
     $request = new Request($method, $url);
     switch ($method) {
       case self::GET:
@@ -165,7 +170,7 @@ class Podio {
         $separator = strpos($url, '?') ? '&' : '?';
         if ($attributes) {
           $query = static::encode_attributes($attributes);
-          $request = $request->withUri($url.$separator.$query);
+          $request = $request->withUri(new Uri($url.$separator.$query));
         }
 
         break;
@@ -176,7 +181,7 @@ class Podio {
         $separator = strpos($url, '?') ? '&' : '?';
         if ($attributes) {
           $query = static::encode_attributes($attributes);
-          $request = $request->withUri($url.$separator.$query);
+          $request = $request->withUri(new Uri($url.$separator.$query));
         }
 
         break;
@@ -240,6 +245,7 @@ class Podio {
       $response->headers = array_map(function($values) {
         return implode(', ', $values);
       }, $http_response->getHeaders());
+      self::$last_http_response = $http_response;
       if(isset($options['return_raw_as_resource_only']) && $options['return_raw_as_resource_only'] == true) {
         self::$last_response = $response;
         return $http_response->getBody();
@@ -369,14 +375,14 @@ class Podio {
     return $parameters ? $url.'?'.join('&', $parameters) : $url;
   }
   public static function rate_limit_remaining() {
-    if (isset(self::$last_response->headers['x-rate-limit-remaining'])) {
-      return self::$last_response->headers['x-rate-limit-remaining'];
-   }
+    if (isset(self::$last_http_response)) {
+      return implode(self::$last_http_response->getHeader('x-rate-limit-remaining'));
+    }
   }
   public static function rate_limit() {
-    if (isset(self::$last_response->headers['x-rate-limit-limit'])) {
-      return self::$last_response->headers['x-rate-limit-limit'];
-   }
+    if (isset(self::$last_http_response)) {
+      return implode(self::$last_http_response->getHeader('x-rate-limit-limit'));
+    }
   }
 
   /**
