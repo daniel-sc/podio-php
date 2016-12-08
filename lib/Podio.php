@@ -188,7 +188,7 @@ class Podio {
               'contents' => $attributes['filename']
             ], [
               'name' => 'source',
-              'contents' => fopen($options['upload'], 'r');
+              'contents' => fopen($options['upload'], 'r')
             ]
           ]));
           $request = $request->withHeader('Content-type', 'multipart/form-data');
