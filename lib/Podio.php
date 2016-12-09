@@ -191,14 +191,12 @@ class Podio {
             [
               'name' => 'source',
               'contents' => fopen($options['upload'], 'r'),
-              'filename' => $attributes['filename']
+              'filename' => $options['upload']
             ], [
               'name' => 'filename',
-              'contents' => $attributes['filename'],
-              'filename' => $attributes['filename']
+              'contents' => $attributes['filename']
             ]
           ]));
-          $request = $request->withHeader('Content-type', 'multipart/form-data');
         }
         elseif (empty($options['oauth_request'])) {
           // application/json
