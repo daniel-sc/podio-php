@@ -33,7 +33,6 @@ class Podio {
     $client_config = [
       'base_uri' => self::$url,
       RequestOptions::HTTP_ERRORS => false,
-      RequestOptions::DEBUG => true,
       RequestOptions::HEADERS => [
         'Accept' => 'application/json',
       	'User-Agent' => 'Podio PHP Client/'. self::VERSION . '-guzzle'
